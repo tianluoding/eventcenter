@@ -1,0 +1,18 @@
+<html>
+    <h1>建立ws</h1>
+    <script>
+        const ws = new WebSocket('ws://localhost:8080/ws');
+    
+        // 连接建立后立即发送唯一标识符
+        ws.onopen = () => {
+            msg = '{"id":"client_id", "type":"subscription", "name":"test", "data":"data"}'
+            console.log(msg)
+            ws.send(msg);
+        };
+    
+        // 监听服务器消息
+        ws.onmessage = (event) => {
+            console.log('Received message:', event.data);
+        };
+    </script>
+</html>
