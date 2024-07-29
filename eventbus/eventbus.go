@@ -28,6 +28,9 @@ func (eb *EventBus) Subscribe(id string, eventName string, ch chan Event) {
 	}
 	if _, ok := eb.subscribers[eventName][id]; !ok {
 		eb.subscribers[eventName][id] = ch
+	} else {
+		close(eb.subscribers[eventName][id])
+		eb.subscribers[eventName][id] = ch
 	}
 }
 
@@ -44,6 +47,7 @@ func (eb *EventBus) Unsubscribe(id string, eventName string) {
 func (eb *EventBus) Publish(event Event) {
 	eb.mu.RLock()
 	defer eb.mu.RUnlock()
+
 	if chans, ok := eb.subscribers[event.Name]; ok {
 		for _, ch := range chans {
 			go func(ch chan Event) {

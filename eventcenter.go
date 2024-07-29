@@ -9,13 +9,18 @@ import (
 	"github.com/tianluoding/eventcenter/eventbus"
 )
 
+type Message struct {
+	ID      string `json:"id"`
+	MsgType string `json:"type"`
+	eventbus.Event
+}
+
 type EventCenter struct {
 	eb eventbus.EventBus
 }
 
-type Message struct {
-	id string
-	eventbus.Event
+func NewEventCenter(eb eventbus.EventBus) *EventCenter {
+	return &EventCenter{eb: eb}
 }
 
 var upgrader = websocket.Upgrader{
@@ -26,7 +31,7 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func (center *EventCenter) handleWebSocket(w http.ResponseWriter, r *http.Request) {
+func (center *EventCenter) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
@@ -35,14 +40,14 @@ func (center *EventCenter) handleWebSocket(w http.ResponseWriter, r *http.Reques
 	defer conn.Close()
 
 	for {
-		msg := Message{}
+		msg := &Message{}
 		err := conn.ReadJSON(msg)
 		if err != nil {
-			log.Printf("read json %v", err)
+			log.Printf("read json err: %v", err)
 		}
-		if msg.Name == "subscription" {
+		if msg.MsgType == "subscription" {
 			eventCh := make(chan eventbus.Event)
-			center.eb.Subscribe(msg.id, msg.Name, eventCh)
+			center.eb.Subscribe(msg.ID, msg.Name, eventCh)
 			go func() {
 				for {
 					select {
@@ -58,8 +63,8 @@ func (center *EventCenter) handleWebSocket(w http.ResponseWriter, r *http.Reques
 					}
 				}
 			}()
-		} else if msg.Name == "unsubscription" {
-			center.eb.Unsubscribe(msg.id, msg.Name)
+		} else if msg.MsgType == "unsubscription" {
+			center.eb.Unsubscribe(msg.ID, msg.Name)
 			time.Sleep(time.Second * 1)
 			break
 		}
