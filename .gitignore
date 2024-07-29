@@ -14,6 +14,7 @@ vendor/
 
 # Go workspace file
 go.work
+go.sum
 
 # Go build directory
 build/
