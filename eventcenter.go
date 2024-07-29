@@ -3,6 +3,7 @@ package eventcenter
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/tianluoding/eventcenter/eventbus"
@@ -59,6 +60,8 @@ func (center *EventCenter) handleWebSocket(w http.ResponseWriter, r *http.Reques
 			}()
 		} else if msg.Name == "unsubscription" {
 			center.eb.Unsubscribe(msg.id, msg.Name)
+			time.Sleep(time.Second * 1)
+			break
 		}
 	}
 }
