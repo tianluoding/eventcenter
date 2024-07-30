@@ -14,10 +14,25 @@ type EventBus struct {
 	mu          sync.RWMutex
 }
 
+var (
+	instance *EventBus
+	once     sync.Once
+	mutex    sync.Mutex
+)
+
 func NewEventBus() *EventBus {
-	return &EventBus{
-		subscribers: make(map[string]map[string]chan Event),
+	if instance == nil {
+		mutex.Lock()
+		defer mutex.Unlock()
+		if instance == nil {
+			once.Do(func() {
+				instance = &EventBus{
+					subscribers: make(map[string]map[string]chan Event),
+				}
+			})
+		}
 	}
+	return instance
 }
 
 func (eb *EventBus) Subscribe(id string, eventName string, ch chan Event) {
@@ -29,7 +44,6 @@ func (eb *EventBus) Subscribe(id string, eventName string, ch chan Event) {
 	if _, ok := eb.subscribers[eventName][id]; !ok {
 		eb.subscribers[eventName][id] = ch
 	} else {
-		close(eb.subscribers[eventName][id])
 		eb.subscribers[eventName][id] = ch
 	}
 }
@@ -41,7 +55,6 @@ func (eb *EventBus) Unsubscribe(id string, eventName string) {
 		return
 	}
 	delete(eb.subscribers[eventName], id)
-	close(eb.subscribers[eventName][id])
 }
 
 func (eb *EventBus) Publish(event Event) {

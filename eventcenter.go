@@ -15,6 +15,7 @@ type Message struct {
 	eventbus.Event
 }
 
+// TODO: center管理connection
 type EventCenter struct {
 	eb eventbus.EventBus
 }
@@ -31,6 +32,10 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
+func (center *EventCenter) Publish(event eventbus.Event) {
+	center.eb.Publish(event)
+}
+
 func (center *EventCenter) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -39,25 +44,30 @@ func (center *EventCenter) HandleWebSocket(w http.ResponseWriter, r *http.Reques
 	}
 	defer conn.Close()
 
+	msg := &Message{}
+	eventCh := make(chan eventbus.Event)
 	for {
-		msg := &Message{}
 		err := conn.ReadJSON(msg)
 		if err != nil {
 			log.Printf("read json err: %v", err)
+			close(eventCh)
+			break
 		}
 		if msg.MsgType == "subscription" {
-			eventCh := make(chan eventbus.Event)
 			center.eb.Subscribe(msg.ID, msg.Name, eventCh)
 			go func() {
 				for {
 					select {
 					case event, ok := <-eventCh:
 						if !ok {
-							log.Println("channel closed")
+							log.Printf("channel closed, %v unsubscribe topic: %v", msg.ID, msg.Name)
+							center.eb.Unsubscribe(msg.ID, msg.Name)
 							return
 						}
 						if err := conn.WriteJSON(event); err != nil {
-							log.Println("Write error:", err)
+							log.Printf("write error: %v, %v unsubscribe topic: %v", err, msg.ID, msg.Name)
+							close(eventCh)
+							center.eb.Unsubscribe(msg.ID, msg.Name)
 							return
 						}
 					}
