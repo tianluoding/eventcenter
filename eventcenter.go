@@ -48,7 +48,6 @@ func (center *EventCenter) listenAndWrite(eventCh chan eventbus.Event, conn *web
 				}
 				if err := conn.WriteJSON(event); err != nil {
 					log.Printf("write error: %v, %v unsubscribe topic: %v", err, msg.ID, msg.Name)
-					close(eventCh)
 					center.eb.Unsubscribe(msg.ID, msg.Name)
 					return
 				}
