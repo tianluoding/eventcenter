@@ -17,10 +17,10 @@ type Message struct {
 
 // TODO: center管理connection
 type EventCenter struct {
-	eb eventbus.EventBus
+	eb *eventbus.EventBus
 }
 
-func NewEventCenter(eb eventbus.EventBus) *EventCenter {
+func NewEventCenter(eb *eventbus.EventBus) *EventCenter {
 	return &EventCenter{eb: eb}
 }
 

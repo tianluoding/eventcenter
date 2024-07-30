@@ -10,7 +10,7 @@ import (
 
 func main() {
 	eb := eventbus.NewEventBus()
-	center := eventcenter.NewEventCenter(*eb)
+	center := eventcenter.NewEventCenter(eb)
 
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		center.HandleWebSocket(w, r)
