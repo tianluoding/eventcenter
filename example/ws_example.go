@@ -16,7 +16,7 @@ func main() {
 		center.HandleWebSocket(w, r)
 	})
 	http.HandleFunc("/publish", func(w http.ResponseWriter, r *http.Request) {
-		eb.Publish(eventbus.Event{Name: "test", Data: "hello world"})
+		center.Publish(eventbus.Event{Name: "test", Data: "hello world"})
 	})
 
 	log.Fatal(http.ListenAndServe(":8080", nil))

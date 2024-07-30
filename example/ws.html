@@ -1,18 +1,68 @@
+<!DOCTYPE html>
 <html>
-    <h1>建立ws</h1>
+<head>
+    <title>WebSocket Example</title>
+</head>
+<body>
+    <h1>WebSocket Communication</h1>
+    <button id="subscribeBtn">Subscribe</button>
+    <button id="unsubscribeBtn">Unsubscribe</button>
+    <div>
+        <textarea id="receivedData" rows="10" cols="50"></textarea>
+    </div>
+
     <script>
-        const ws = new WebSocket('ws://localhost:8080/ws');
-    
-        // 连接建立后立即发送唯一标识符
-        ws.onopen = () => {
-            msg = '{"id":"client_id", "type":"subscription", "name":"test", "data":"data"}'
-            console.log(msg)
+        // 生成client_id
+        function generateClientId() {
+            return 'client_' + Date.now() + '_' + Math.random().toString(36).substring(2);
+        }
+
+        // WebSocket实例
+        var ws = new WebSocket('ws://localhost:8080/ws');
+
+        // 存储client_id
+        var clientId = generateClientId();
+
+        // 连接建立后发送唯一标识符
+        ws.onopen = function() {
+            var msg = JSON.stringify({
+                "id": clientId,
+                "type": "subscription",
+                "name": "test",
+                "data": "data"
+            });
+            console.log("Sending message:", msg);
             ws.send(msg);
         };
-    
+
         // 监听服务器消息
-        ws.onmessage = (event) => {
+        ws.onmessage = function(event) {
+            document.getElementById('receivedData').value += event.data + '\n';
             console.log('Received message:', event.data);
         };
+
+        // 订阅按钮点击事件
+        document.getElementById('subscribeBtn').addEventListener('click', function() {
+            var msg = JSON.stringify({
+                "id": clientId,
+                "type": "subscription",
+                "name": "test",
+                "data": "data"
+            });
+            console.log("Subscribing with message:", msg);
+            ws.send(msg);
+        });
+
+        // 取消订阅按钮点击事件
+        document.getElementById('unsubscribeBtn').addEventListener('click', function() {
+            var msg = JSON.stringify({
+                "id": clientId,
+                "type": "unsubscription",
+                "name": "test"
+            });
+            console.log("Unsubscribing with message:", msg);
+            ws.send(msg);
+        });
     </script>
+</body>
 </html>
