@@ -36,7 +36,7 @@ func (center *EventCenter) Publish(event eventbus.Event) {
 	center.eb.Publish(event)
 }
 
-func (center *EventCenter) listenAndWrite(eventCh chan eventbus.Event, conn *websocket.Conn, msg *Message) {
+func (center *EventCenter) listenAndWrite(eventCh chan eventbus.Event, conn *websocket.Conn, msg *Message, handleFinished chan bool) {
 	go func() {
 		for {
 			select {
@@ -51,6 +51,9 @@ func (center *EventCenter) listenAndWrite(eventCh chan eventbus.Event, conn *web
 					center.eb.Unsubscribe(msg.ID, msg.Name)
 					return
 				}
+			case <-handleFinished:
+				center.eb.Unsubscribe(msg.ID, msg.Name)
+				return
 			}
 		}
 	}()
@@ -66,20 +69,22 @@ func (center *EventCenter) HandleWebSocket(w http.ResponseWriter, r *http.Reques
 
 	msg := &Message{}
 	eventCh := make(chan eventbus.Event)
+	handleFinished := make(chan bool)
 	for {
 		err := conn.ReadJSON(msg)
 		if err != nil {
-			log.Printf("read json err: %v", err)
-			close(eventCh)
+			log.Printf("read json err: %v, %v unsubscribe topic: %v", err, msg.ID, msg.Name)
+			center.eb.Unsubscribe(msg.ID, msg.Name)
 			break
 		}
 		if msg.MsgType == "subscription" {
 			center.eb.Subscribe(msg.ID, msg.Name, eventCh)
-			center.listenAndWrite(eventCh, conn, msg)
+			center.listenAndWrite(eventCh, conn, msg, handleFinished)
 		} else if msg.MsgType == "unsubscription" {
 			center.eb.Unsubscribe(msg.ID, msg.Name)
 			time.Sleep(time.Second * 1)
 			break
 		}
 	}
+	handleFinished <- true
 }
