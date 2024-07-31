@@ -3,6 +3,7 @@ module github.com/tianluoding/eventcenter
 go 1.22
 
 require (
+	github.com/agiledragon/gomonkey/v2 v2.12.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/onsi/gomega v1.34.1
 	github.com/smartystreets/goconvey v1.8.1
