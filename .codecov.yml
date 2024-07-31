@@ -2,5 +2,5 @@ coverage:
   status:
     project:
       default:
-        target: 40%
+        target: 60%
         if_not_found: success

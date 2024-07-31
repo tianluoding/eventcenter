@@ -69,7 +69,7 @@ func (center *EventCenter) HandleWebSocket(w http.ResponseWriter, r *http.Reques
 
 	msg := &Message{}
 	eventCh := make(chan eventbus.Event)
-	handleFinished := make(chan bool)
+	handleFinished := make(chan bool, 1)
 	for {
 		err := conn.ReadJSON(msg)
 		if err != nil {
