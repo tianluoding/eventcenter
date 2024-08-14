@@ -66,7 +66,7 @@ func (center *EventCenter) HandleWebSocket(w http.ResponseWriter, r *http.Reques
 
 	msg := &Message{}
 	eventCh := make(chan eventbus.Event)
-	handleFinished := make(chan bool, 1)
+	handleFinished := make(chan bool)
 	for {
 		err := conn.ReadJSON(msg)
 		if err != nil {
@@ -75,8 +75,14 @@ func (center *EventCenter) HandleWebSocket(w http.ResponseWriter, r *http.Reques
 			break
 		}
 		if msg.MsgType == "subscription" {
-			center.eb.Subscribe(msg.ID, msg.Name, eventCh)
-			center.listenAndWrite(eventCh, conn, msg, handleFinished)
+			hasSubscribed := center.eb.Subscribe(msg.ID, msg.Name, eventCh)
+			if hasSubscribed {
+				log.Printf("client_id: %v has already subscribed topic: %v", msg.ID, msg.Name)
+			} else {
+				log.Printf("client_id: %v first subscribe topic: %v, start listening", msg.ID, msg.Name)
+				center.listenAndWrite(eventCh, conn, msg, handleFinished)
+			}
+
 		} else if msg.MsgType == "unsubscription" {
 			center.eb.Unsubscribe(msg.ID, msg.Name, handleFinished)
 			time.Sleep(time.Second * 1)

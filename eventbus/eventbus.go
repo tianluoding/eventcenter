@@ -35,15 +35,17 @@ func NewEventBus() *EventBus {
 	return instance
 }
 
-func (eb *EventBus) Subscribe(id string, eventName string, ch chan Event) {
+func (eb *EventBus) Subscribe(id string, eventName string, ch chan Event) bool {
 	eb.mu.Lock()
 	defer eb.mu.Unlock()
 	if _, ok := eb.subscribers[eventName]; !ok {
 		eb.subscribers[eventName] = make(map[string]chan Event)
 	}
-
+	if _, ok := eb.subscribers[eventName][id]; ok {
+		return true
+	}
 	eb.subscribers[eventName][id] = ch
-
+	return false
 }
 
 func (eb *EventBus) Unsubscribe(id string, eventName string, handleFinished chan bool) {
