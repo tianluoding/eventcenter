@@ -48,7 +48,7 @@ func TestEventCenter(t *testing.T) {
 			eventCh <- eventbus.Event{}
 			time.Sleep(10 * time.Millisecond) // Allow time for the goroutine to process the event
 
-			close(eventCh)
+			close(handleFinished)
 			wg.Wait()
 		})
 
