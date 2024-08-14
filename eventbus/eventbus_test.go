@@ -42,11 +42,12 @@ func TestUnsubscribe(t *testing.T) {
 	bus := NewEventBus()
 
 	testCh := make(chan Event)
+	finished := make(chan bool)
 	eventName := "testEvent"
 	id := "testID"
 
 	bus.Subscribe(id, eventName, testCh)
-	bus.Unsubscribe(id, eventName)
+	bus.Unsubscribe(id, eventName, finished)
 
 	g.Eventually(func() bool {
 		_, ok := bus.subscribers[eventName][id]
