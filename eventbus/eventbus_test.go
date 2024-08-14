@@ -83,7 +83,7 @@ func TestPublishConcurrent(t *testing.T) {
 	bus := NewEventBus()
 	testCh := make(chan Event, 10)
 	eventName := "testEvent"
-	id := "testID"
+	id := "testID123"
 
 	bus.Subscribe(id, eventName, testCh)
 
